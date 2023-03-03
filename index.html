@@ -1,0 +1,68 @@
+<html>
+  <head>
+    <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.11.2"></script>
+  </head>
+  <body>
+    <!-- 예측하기를 눌렀을 때 predict를 실행하는 구문이 들어간다 -->
+    <form onsubmit="predict();return false;">
+      <input id="input" />
+      <input type="submit" value="예측하기" />
+    </form>
+    <div>
+      <div id="output_field"></div>
+    </div>
+  </body>
+  <script>
+    // 모델 생성(껍데기)
+    // 초기에 모델에 어떤 값을 넣을거냐
+    const model = tf.sequential();
+    // 모델에 layer 추가
+    // 길이가 1인, layer안에 노드 1개, 선형 활성화 함수
+    // inputShape: 모델의 첫번째 레이어에 설정하는 값으로, 모델의 초기 입력 규격 설정
+    // units: 노드의 개수
+    // activation: 활성화 함수 선택
+    const layer1 = tf.layers.dense({
+      inputShape: [1],
+      units: 1,
+      activation: "linear", // 선형 활성화 함수
+    });
+    const layer2 = tf.layers.dense({
+      units: 1,
+      activation: "linear",
+    });
+    model.add(layer1);
+    model.add(layer2);
+    model.compile({
+      // 학습 방식
+      // lose: 손실 함수 선택
+      // optimizer: 손실 함수를 최적화 하는 함수 선택
+      loss: "meanSquaredError", // 평균 제곱 오차
+      optimizer: "sgd", // 확률적 경사 하강법
+    });
+    // 학습데이터 & 정답
+    const xs = tf.tensor2d([-1, 0, 1, 2, 3, 4], [6, 1]); // 학습데이터
+    const ys = tf.tensor2d([-3, -1, 1, 3, 5, 7], [6, 1]); // 결과값 xs와 1:1로 대응
+    // 모델 학습
+    // epochs(에폭): 학습을 얼마나 시킬건지
+    // 500번 이터레이션(Iteration)
+    // promise 객체
+    model
+      .fit(xs, ys, { epochs: 500 })
+      .then((result) => {
+        console.log(result);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+
+    function predict() {
+      // 학습된 모델에 입력값을 줄 때 쓰는 form의 input
+      const value = parseInt(document.getElementById("input").value);
+      // 학습된 모델을 예측 시킨다(사용)
+      const predictedValue = model.predict(tf.tensor2d([value], [1, 1]));
+      // output_field id를 가진 <div> tag에 값이 들어간다
+      document.getElementById("output_field").innerText = predictedValue;
+    }
+  </script>
+</html>
